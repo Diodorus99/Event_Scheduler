@@ -1,10 +1,21 @@
+// EventScheduler.java
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.time.format.DateTimeParseException;
+
 public class EventScheduler {
     private List<Event> events;
     private Scanner scanner;
     
     public EventScheduler() {
-        events = new ArrayList<>() ;
-        scanner = new Scanner(System.in) ;
+        this.events = new ArrayList<>() ;
+        this.scanner = new Scanner(System.in) ;
     }
     
     public void run() {
@@ -23,29 +34,30 @@ public class EventScheduler {
             int choice = Integer.parseInt(scanner.nextLine());
             switch (choice) {
                 case 1:
-                    events.addEvent() ;
+                    addEvent() ;
                     //add event
                     
                     break;
                 case 2:
                     //display all events
-                    events.displayAllEvents() ;
+                    displayAllEvents() ;
                     break;
                 case 3:
                     //show time until event
-                    events.showTimeUntilEvent() ;
+                    showTimeUntilEvent() ;
                     break;
                 case 4:
                     // convert event time
-                    events.convertEventTime() ;
+                    convertEventTime() ;
                     break;
                 case 5:
                     // find upcoming events
-                    events.FindUpcomingEvents() ;
+                    findUpcomingEvents() ;
                     break;
                 case 6:
                     running = false;
                     System.out.println("Exiting the Event Scheduler. Goodbye!");
+                    scanner.close();
                     break;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -56,12 +68,21 @@ public class EventScheduler {
     
     private void addEvent() {
         // Step 10: Implement method to get event details from user and create a new Event
-        System.out.println("What is the name of the event?") ;
-        String name = scanner.nextLine() ;
-        System.out.println("When is the event?(format: dd/MM/yyyy)") ;
-        ZonedDateTime dateTime = dateTime.parse(scanner.nextLine() , "dd/MM/yyyy") ;
-        Event newEvent = new Event(name , dateTime) ;
-        events.add(newEvent) ;
+        System.out.print("Event name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Event date & time (dd/MM/yyyy HH:mm): ");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        LocalDateTime localDateTime = LocalDateTime.parse(scanner.nextLine(), formatter);
+        ZonedDateTime dateTime = localDateTime.atZone(ZoneId.systemDefault());
+
+        System.out.print("Duration in minutes: ");
+        long minutes = Long.parseLong(scanner.nextLine());
+        Duration duration = Duration.ofMinutes(minutes);
+
+        Event newEvent = new Event(name, dateTime, duration);
+        events.add(newEvent);
     }
     
     private void displayAllEvents() {
@@ -72,8 +93,6 @@ public class EventScheduler {
                 System.out.println(i) ;
             }
         }
-        // Hint: Get format pattern from user
-        // Loop through events list and display each event with the specified format
     }
     
     private void showTimeUntilEvent() {
@@ -83,7 +102,7 @@ public class EventScheduler {
         for (Event j: events) {
             index++ ;
             if (j != null) {
-                System.out.println(index+" - "j.getName()) ;
+                System.out.println(index+" - "+j.getName()) ;
             }
         }
         System.out.println("Pick event by index") ;
@@ -91,13 +110,10 @@ public class EventScheduler {
         int count = 1 ;
         for (Event k: events) {
             if (count==inputIndex) {
-                System.out.println(k.timeRemaining();) ;
+                System.out.println(k.timeUntilEvent()) ;
             }
             count++ ;
         }
-        // Hint: Show list of events with numbers
-        // Get event selection from user
-        // Calculate and display time until the selected event
     }
     
     private void convertEventTime() {
@@ -107,24 +123,18 @@ public class EventScheduler {
         for (Event j: events) {
             index++ ;
             if (j != null) {
-                System.out.println(index+" - "j.getName()) ;
+                System.out.println(index+" - "+j.getName()) ;
             }
         }
         System.out.println("Pick event by index") ;
         int inputIndex = Integer.parseInt(scanner.nextLine()) ;
-        System.out.println("What is the new timezone?(format z)") ;
-        ZonedDateTime timezoneId = dateTime.parse(scanner.nextLine(),"z") ;
-        int count = 1 ;
-        for (Event k: events) {
-            if (count==inputIndex) { 
-                System.out.println(givenDateTime.timeDifferentTimeZone(timezoneId)) ;
-            }
-        count ++ ;
-        }
-        // Hint: Show list of events with numbers
-        // Get event selection from user
-        // Get target timezone from user
-        // Convert and display event time in the target timezone
+        System.out.print("Enter timezone (e.g. UTC, America/New_York): ");
+        String zoneId = scanner.nextLine();
+
+        Event selected = events.get(inputIndex - 1);
+        ZonedDateTime converted = selected.convertToTimezone(zoneId);
+
+        System.out.println("Converted time: " + converted);
     }
     
     private void findUpcomingEvents() {
@@ -133,8 +143,9 @@ public class EventScheduler {
         int days = Integer.parseInt(scanner.nextLine()) ;
         System.out.println("Events within "+days+"days from now:") ;
         for (Event l: events) {
-            if (Duration.between(ZonedDateTime.now() , l.dateTime)<=days) { 
-                System.out.println(l) ;
+            Duration diff = Duration.between(ZonedDateTime.now(), l.getDateTime());
+            if (!diff.isNegative() && diff.toDays() <= days) {
+                System.out.println(l);
             }
         }
     }
@@ -144,5 +155,5 @@ public class EventScheduler {
         EventScheduler scheduler = new EventScheduler();
         scheduler.run();
     }
-    scanner.close() ;
+    //scanner.close() ;
 }
